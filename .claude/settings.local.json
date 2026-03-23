@@ -3,7 +3,14 @@
     "allow": [
       "Bash(npm install:*)",
       "Bash(npx tsc:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(supabase --version)",
+      "Bash(supabase init:*)",
+      "Bash(supabase projects:*)",
+      "Bash(supabase link:*)",
+      "Bash(supabase secrets:*)",
+      "Bash(supabase functions:*)",
+      "Bash(curl -s -X POST https://phdwvnforgbybowkfigy.supabase.co/functions/v1/kroger-mcp -H \"Content-Type: application/json\" -d '{\"\"\"\"jsonrpc\"\"\"\":\"\"\"\"2.0\"\"\"\",\"\"\"\"method\"\"\"\":\"\"\"\"tools/list\"\"\"\",\"\"\"\"id\"\"\"\":1}')"
     ]
   }
 }
