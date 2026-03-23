@@ -27,7 +27,6 @@ export interface KrogerProduct {
 }
 
 export interface AisleGroup {
-  aisleNumber: string;
   aisleDescription: string;
   items: string[];
 }

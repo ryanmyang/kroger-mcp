@@ -40,7 +40,7 @@ export function createMcpServer(): McpServer {
 
   server.tool(
     "organize_grocery_list",
-    "Takes a Kroger store locationId and a list of grocery items, looks up each item's aisle at that store, and returns the list organized by aisle number.",
+    "Takes a Kroger store locationId and a list of grocery items, looks up each item's aisle at that store, and returns the list organized by aisle section.",
     {
       location_id: z.string().describe("Kroger store locationId from find_kroger_store"),
       items: z.array(z.string()).describe("List of grocery items to look up"),
@@ -57,16 +57,15 @@ export function createMcpServer(): McpServer {
         items.map((item) => getProductAisle(item, location_id))
       );
 
-      // Group by aisle
+      // Group by aisle description
       const aisleMap = new Map<string, AisleGroup>();
 
       for (const result of results) {
         const aisle = result.aisle;
-        const key = aisle?.number ?? "unknown";
-        const description = aisle?.description ?? "Aisle Unknown";
+        const key = aisle?.description ?? "Unknown";
 
         if (!aisleMap.has(key)) {
-          aisleMap.set(key, { aisleNumber: key, aisleDescription: description, items: [] });
+          aisleMap.set(key, { aisleDescription: key, items: [] });
         }
 
         const displayItem = result.matchedName
@@ -76,21 +75,19 @@ export function createMcpServer(): McpServer {
         aisleMap.get(key)!.items.push(displayItem);
       }
 
-      // Sort: numeric aisles first in order, then "unknown" at end
+      // Sort: named sections first (alphabetically), then "Aisle N" sections (numerically), then "Unknown"
+      const aisleNumberPattern = /^Aisle\s+\d+/i;
       const sorted = [...aisleMap.values()].sort((a, b) => {
-        if (a.aisleNumber === "unknown") return 1;
-        if (b.aisleNumber === "unknown") return -1;
-        const numA = parseInt(a.aisleNumber, 10);
-        const numB = parseInt(b.aisleNumber, 10);
-        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-        return a.aisleNumber.localeCompare(b.aisleNumber);
+        if (a.aisleDescription === "Unknown") return 1;
+        if (b.aisleDescription === "Unknown") return -1;
+        const aIsNumbered = aisleNumberPattern.test(a.aisleDescription);
+        const bIsNumbered = aisleNumberPattern.test(b.aisleDescription);
+        if (aIsNumbered !== bIsNumbered) return aIsNumbered ? 1 : -1;
+        return a.aisleDescription.localeCompare(b.aisleDescription);
       });
 
       const sections = sorted.map((group) => {
-        const header =
-          group.aisleNumber === "unknown"
-            ? "### Aisle Unknown"
-            : `### Aisle ${group.aisleNumber} — ${group.aisleDescription}`;
+        const header = `### ${group.aisleDescription}`;
         const itemList = group.items.map((i) => `- ${i}`).join("\n");
         return `${header}\n${itemList}`;
       });
